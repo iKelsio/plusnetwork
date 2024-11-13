@@ -55,7 +55,11 @@ export class ApplyForJobUserUseCase extends BaseUseCase<
     await this.emailProvider.sendMail(
       foundUser.email.value,
       EmailTemplate.jobApplicationConfirmation,
-      {}
+      {
+        user: foundUser.flat(),
+        jobTitle: foundJob.title,
+        companyName: foundJob.company.name,
+      }
     );
 
     await this.jobApplicationRepo.save(jobApplication);

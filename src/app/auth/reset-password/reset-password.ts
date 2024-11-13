@@ -2,18 +2,14 @@ import { BaseUseCase } from "@app/shared";
 import {
   DomainException,
   Either,
-  Identifier,
   InvalidParameterException,
   right,
 } from "@domain/shared/core";
 import { IUserRepository } from "@domain/user/user.repository";
 import { ResetPasswordUserRequest } from "./reset-password.request";
 import { UserPasswordHash } from "@domain/user/user-password";
-import {
-  EmailTemplate,
-  IEmailProvider,
-  ITokenProvider,
-} from "@domain/shared/ports";
+import { EmailTemplate, IEmailProvider } from "@domain/shared/ports";
+import { DateTime } from "luxon";
 
 type Response = Either<DomainException, boolean>;
 
@@ -23,7 +19,6 @@ class ResetPasswordUserUseCase extends BaseUseCase<
 > {
   constructor(
     private userRepo: IUserRepository,
-    private tokenProvider: ITokenProvider<{ userId: string }>,
     private emailProvider: IEmailProvider
   ) {
     super();
@@ -32,11 +27,15 @@ class ResetPasswordUserUseCase extends BaseUseCase<
   protected async executeImpl(
     payload: ResetPasswordUserRequest
   ): Promise<Response> {
-    const { userId } = this.tokenProvider.verifyToken(payload.token);
-
-    const foundUser = await this.userRepo.findById(new Identifier(userId));
-
+    const foundUser = await this.userRepo.findByToken(payload.token);
     if (!foundUser) return right(false);
+
+    if (
+      DateTime.fromJSDate(foundUser.resetTokenExpiration!)
+        .diffNow()
+        .toMillis() < 0
+    )
+      throw new Error("Invalid Token! Try Again");
 
     const passwordOrError = await UserPasswordHash.fromPlainPassword(
       payload.password
@@ -50,8 +49,10 @@ class ResetPasswordUserUseCase extends BaseUseCase<
     await this.emailProvider.sendMail(
       foundUser.email.value,
       EmailTemplate.passwordChanged,
-      {}
+      { user: foundUser.flat() }
     );
+
+    this.userRepo.save(foundUser);
 
     return right(true);
   }

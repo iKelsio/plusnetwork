@@ -7,4 +7,5 @@ export interface IUserRepository extends IBaseRepository<User> {
   findUnique(
     field: Partial<Pick<IUserAttributes, "email">>
   ): Promise<Nullable<User>>;
+  findByToken(token: string): Promise<Nullable<User>>;
 }

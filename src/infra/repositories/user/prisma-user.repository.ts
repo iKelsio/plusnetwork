@@ -9,6 +9,17 @@ import { Nullable } from "@domain/shared/types";
 
 class PrismaUserRepository implements IUserRepository {
   constructor(private usersRepository: PrismaClient["user"]) {}
+  public async findByToken(token: string): Promise<Nullable<User>> {
+    const user = await this.usersRepository.findFirst({
+      where: {
+        resetToken: token,
+      },
+    });
+
+    if (!user) return null;
+
+    return PrismaUserMapper.toDomainModel(user);
+  }
 
   public async findAll(): Promise<User[]> {
     const users = await this.usersRepository.findMany({

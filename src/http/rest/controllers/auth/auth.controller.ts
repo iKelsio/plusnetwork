@@ -12,7 +12,6 @@ import {
   ResetPasswordUserUseCase,
 } from "@app/auth/reset-password";
 import { NodemailerProvider } from "@infra/adapters/email";
-import { JwtProvider } from "@infra/adapters/token";
 import { LoginDTO, LoginRequest, LoginUseCase } from "@app/auth/login";
 import { StatusCodes } from "http-status-codes";
 import {
@@ -104,6 +103,7 @@ class AuthController {
 
       const result = await this.forgotPasswordUC.execute(dto);
 
+      console.log({ result });
       if (result.isLeft())
         return {
           message: result.value.name,
@@ -111,7 +111,6 @@ class AuthController {
             error: result.value,
           },
         };
-
       return {
         message: result.value,
         payload: {},
@@ -146,7 +145,9 @@ class AuthController {
 
       const ok = result.value;
 
-      if (!ok) return reply.status(404);
+      if (!ok) return reply.status(404).send("404");
+
+      request.session.destroy();
 
       return {
         message: "Password Updated successfully!",
@@ -161,13 +162,12 @@ export const autoPrefix = `/${folder}`;
 
 const auth: FastifyPluginAsync = async (fastify) => {
   const usersRepo = new PrismaUserRepository(fastify.prisma.user);
-  const jwtProvider = new JwtProvider<{ userId: string }>(fastify.jwt);
   const nodemailerProvider = new NodemailerProvider();
   const authController = new AuthController(
     new RegisterUserUseCase(usersRepo, nodemailerProvider),
     new LoginUseCase(usersRepo),
-    new ForgotPasswordUseCase(usersRepo, jwtProvider, nodemailerProvider),
-    new ResetPasswordUserUseCase(usersRepo, jwtProvider, nodemailerProvider)
+    new ForgotPasswordUseCase(usersRepo, nodemailerProvider),
+    new ResetPasswordUserUseCase(usersRepo, nodemailerProvider)
   );
 
   fastify.post("/register", authController.register());

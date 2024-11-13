@@ -3,6 +3,8 @@ CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
+    "resetToken" TEXT,
+    "resetTokenExpiration" TIMESTAMP(3),
     "name" TEXT NOT NULL,
     "gender" TEXT NOT NULL,
     "country" TEXT NOT NULL,
@@ -32,7 +34,11 @@ CREATE TABLE "jobs" (
     "workType" TEXT NOT NULL,
     "skillsTags" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" VARCHAR(255),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedBy" VARCHAR(255),
+    "deletedAt" TIMESTAMP(3),
+    "deletedBy" VARCHAR(255),
 
     CONSTRAINT "jobs_pkey" PRIMARY KEY ("id")
 );
@@ -48,7 +54,11 @@ CREATE TABLE "companies" (
     "industryType" TEXT NOT NULL,
     "location" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "createdBy" VARCHAR(255),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedBy" VARCHAR(255),
+    "deletedAt" TIMESTAMP(3),
+    "deletedBy" VARCHAR(255),
 
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
 );
@@ -61,6 +71,12 @@ CREATE TABLE "job_applications" (
     "appliedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "message" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdBy" VARCHAR(255),
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedBy" VARCHAR(255),
+    "deletedAt" TIMESTAMP(3),
+    "deletedBy" VARCHAR(255),
 
     CONSTRAINT "job_applications_pkey" PRIMARY KEY ("id")
 );

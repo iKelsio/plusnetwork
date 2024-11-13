@@ -8,25 +8,26 @@ datasource db {
 }
 
 model User {
-  id           String           @id @default(uuid())
-  email        String           @unique
-  passwordHash String
-  resetToken   String?
-  name         String
-  gender       String
-  country      String
-  phone        String
-  photo        String?
-  verified     Boolean          @default(false)
-  birthDate    DateTime
-  appliedJobs  JobApplication[]
-  savedJobs    Job[]            @relation("SavedJobs")
-  createdAt    DateTime         @default(now())
-  createdBy    String?          @db.VarChar(255)
-  updatedAt    DateTime         @default(now()) @updatedAt
-  updatedBy    String?          @db.VarChar(255)
-  deletedAt    DateTime?
-  deletedBy    String?          @db.VarChar(255)
+  id                   String           @id @default(uuid())
+  email                String           @unique
+  passwordHash         String
+  resetToken           String?
+  resetTokenExpiration DateTime?
+  name                 String
+  gender               String
+  country              String
+  phone                String
+  photo                String?
+  verified             Boolean          @default(false)
+  birthDate            DateTime
+  appliedJobs          JobApplication[]
+  savedJobs            Job[]            @relation("SavedJobs")
+  createdAt            DateTime         @default(now())
+  createdBy            String?          @db.VarChar(255)
+  updatedAt            DateTime         @default(now()) @updatedAt
+  updatedBy            String?          @db.VarChar(255)
+  deletedAt            DateTime?
+  deletedBy            String?          @db.VarChar(255)
 
   @@map("users")
 }

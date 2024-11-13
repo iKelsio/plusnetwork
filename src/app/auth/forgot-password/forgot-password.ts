@@ -3,12 +3,9 @@ import { DomainException, Either, right } from "@domain/shared/core";
 import { UserEmail } from "@domain/user/user-email";
 import { IUserRepository } from "@domain/user/user.repository";
 import { ForgotPasswordRequest } from "./forgot-password.request";
-import {
-  EmailTemplate,
-  IEmailProvider,
-  ITokenProvider,
-} from "@domain/shared/ports";
+import { EmailTemplate, IEmailProvider } from "@domain/shared/ports";
 import { DateTime } from "luxon";
+import * as crypto from "crypto";
 
 type Response = Either<DomainException, string>;
 
@@ -18,7 +15,6 @@ export class ForgotPasswordUseCase extends BaseUseCase<
 > {
   constructor(
     private userRepo: IUserRepository,
-    private tokenProvider: ITokenProvider<{ userId: string }>,
     private emailProvider: IEmailProvider
   ) {
     super();
@@ -33,23 +29,28 @@ export class ForgotPasswordUseCase extends BaseUseCase<
       email: emailOrError.getValue(),
     });
 
-    if (!foundUser) return right("Verify your email");
+    if (!foundUser) return right("Check your email inbox");
 
-    const token: string = this.tokenProvider.generateToken(
-      { userId: foundUser.id.value },
-      DateTime.now().plus({ minutes: 30 }).toJSDate()
-    );
-
-    foundUser.setResetToken(token, payload.triggeredBy);
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiration = DateTime.now().plus({ minutes: 30 }).toJSDate();
+    console.log({
+      expiration,
+      now: DateTime.now().toJSDate(),
+      diff: DateTime.fromJSDate(expiration).diffNow().toMillis(),
+    });
+    foundUser.setResetToken(token, expiration, payload.triggeredBy);
 
     this.emailProvider.sendMail(
-      foundUser.id.value,
+      foundUser.email.value,
       EmailTemplate.forgotPassword,
-      {}
+      {
+        user: foundUser.flat(),
+        resetLink: `http://localhost:5500/api/v1/reset-password/${token}`,
+      }
     );
 
     this.userRepo.save(foundUser);
 
-    return right("Verify your email");
+    return right("Check your email inbox");
   }
 }

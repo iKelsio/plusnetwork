@@ -1,6 +1,6 @@
 export enum EmailTemplate {
   passwordChanged = "password-changed",
-  forgotPassword = "fortgot-password",
+  forgotPassword = "forgot-password",
   jobApplicationConfirmation = "job-application-confirmation",
   welcome = "welcome",
 }

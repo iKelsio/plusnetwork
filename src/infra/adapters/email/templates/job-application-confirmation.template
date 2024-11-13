@@ -1,0 +1,8 @@
+Hello <%= user.name %>,
+
+Thank you for applying for the position of <%= jobTitle %> at <%= companyName %>.
+
+We have received your application and will review it soon. We’ll keep you updated on the next steps.
+
+Best of luck,
+The Team

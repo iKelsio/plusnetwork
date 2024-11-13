@@ -28,6 +28,7 @@ export class User extends Entity implements IUserAttributes {
     public country: string,
     public verified: boolean = false,
     public resetToken: string | null = null,
+    public resetTokenExpiration: Date | null = null,
     private savedJobs: Job[] = [],
     id?: Identifier,
     createdAt?: Date,
@@ -69,6 +70,7 @@ export class User extends Entity implements IUserAttributes {
       attributes.country,
       false,
       null,
+      null,
       [],
       userId
     );
@@ -96,11 +98,17 @@ export class User extends Entity implements IUserAttributes {
 
     this.passwordHash = newPassword;
     this.resetToken = null;
+    this.resetTokenExpiration = null;
     this.markAsUpdated(updatedBy);
   }
 
-  public setResetToken(token: string, updatedBy: TriggeredBy) {
+  public setResetToken(
+    token: string,
+    expiration: Date,
+    updatedBy: TriggeredBy
+  ) {
     this.resetToken = token;
+    this.resetTokenExpiration = expiration;
     this.markAsUpdated(updatedBy);
   }
 
