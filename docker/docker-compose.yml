@@ -1,0 +1,66 @@
+services:
+  plusnetwork:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+      args:
+        PORT: ${PORT}
+    image: ${IMAGE_NAME}:prod
+    container_name: plusnetwork
+    restart: always
+    depends_on:
+      - plusnetwork-postgres
+    env_file:
+      - ../.env
+    environment:
+      TZ: ${TZ}
+      WAIT_HOSTS: plusnetwork-postgres:5432
+    volumes:
+      - ${LOGS_VOLUME}:/app/logs
+    ports:
+      - ${EXTERNAL_PORT}:${PORT}
+
+  plusnetwork-postgres:
+    image: postgres:latest
+    container_name: plusnetwork-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+      TZ: ${TZ}
+    volumes:
+      - ${DATABASE_VOLUME}:/var/lib/postgresql/data
+    ports:
+      - ${DATABASE_PORT}:5432
+
+  plusnetwork-redis:
+    image: redis:latest
+    container_name: plusnetwork-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${CACHE_PASSWORD}
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ${CACHE_VOLUME}:/data
+    ports:
+      - ${CACHE_PORT}:6379
+
+  plusnetwork-redis-commander:
+    image: rediscommander/redis-commander
+    container_name: plusnetwork-redis-commander
+    restart: always
+    depends_on:
+      - plusnetwork-redis
+    environment:
+      REDIS_LABEL: ${IMAGE_NAME}-cache
+      REDIS_HOST: plusnetwork-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${CACHE_PASSWORD}
+      TZ: ${TZ}
+    ports:
+      - ${CACHE_MANAGER_PORT}:8081
+
+networks:
+  default:
+    name: ${IMAGE_NAME}-network
